@@ -1,6 +1,7 @@
 ## Get coastal effort
 
 effort_coastal <- readRDS('effort_coastal.rds')
+effort_coastal <- effort_coastal %>% filter(get_year(observation_date) > 2006)
 monthly_coastal_effort <-
   effort_coastal %>% use_series(observation_date) %>% get_month %>% table %>% as.vector
 names(monthly_coastal_effort) <- month.abb
@@ -10,6 +11,7 @@ rm(effort_coastal)
 ## Get pelagic effort
 
 effort_pelagic <- readRDS('effort_pelagic.rds')
+effort_pelagic <- effort_pelagic %>% filter(get_year(observation_date) > 2006)
 monthly_pelagic_effort <-
   effort_pelagic %>% use_series(observation_date) %>% get_month %>% table %>% as.vector
 names(monthly_pelagic_effort) <- month.abb
@@ -19,10 +21,13 @@ rm(effort_pelagic)
 ## Get coastal observations
 
 readRDS("eucd_coastal.rds") -> eucd_coastal
+eucd_coastal <- eucd_coastal %>% filter(get_year(observation_date) > 2006)
+
 
 ## Get pelagic observations
 
 readRDS("eucd_pelagic.rds") -> eucd_pelagic
+eucd_pelagic <- eucd_pelagic %>% filter(get_year(observation_date) > 2006)
 
 ## Monthly pelagic observations
 
@@ -47,6 +52,12 @@ monthly_pelagic_density <-
   sum( monthly_pelagic_records/monthly_pelagic_effort )
 # Graph density
 monthly_pelagic_density %>% barplot(ylab='Density')
+
+# Chisq.test ~ raw
+monthly_pelagic_records %>% chisq.test(
+  simulate.p.value=T
+)
+
 # Chisq.test ~ density
 monthly_pelagic_records %>% chisq.test(
   p=(monthly_pelagic_effort/sum(monthly_pelagic_effort)),
@@ -62,6 +73,17 @@ nrow(eucd_coastal)
 eucd_coastal %>% use_series(observer_id) %>% unique %>% length
 eucd_coastal %>% use_series(locality_id) %>% unique %>% length
 
+# Number of records with >10 birds, w/o regard to comments
+eucd_coastal %>%
+  filter(observation_count != 'X') %>%
+  filter(as.numeric(observation_count) >= 10) %>%
+  nrow
+
+# Number of records with species comments, w/o regard to number of birds
+eucd_coastal %>%
+  filter(species_comments != "" ) %>%
+  nrow
+
 ## Get records with comments and >=10 birds
 eucd_10_comments <- 
   eucd_coastal %>%
@@ -74,18 +96,18 @@ readRDS("eucd_10_comments.rds") -> eucd_10_comments
 
 # Get summary stats for the manual coding dataset
 eucd_10_comments %>% nrow
-#841
+#841, 834 since 2007
 eucd_10_comments %>% use_series('locality_id') %>% unique %>% length
-#440
+#440, 437 since 2007
 eucd_10_comments %>% use_series('observer_id') %>% unique %>% length
-#336
+#336, all 336 since 2007
 
 
 
 # Get coastal sample size by month
 
 month_N <-
-readRDS("eucd_coastal.rds") %>%
+  eucd_coastal %>%
   use_series(observation_date) %>% 
   get_month %>%
   table
@@ -94,15 +116,14 @@ names(month_N) <- month.abb
 
 # Monthly # of species comments -- all observations
 month_spcom <-
-  readRDS("eucd_coastal.rds") %>%
-  filter(country != "Mexico" & species_comments != "") %>%
+  eucd_coastal %>%
+  filter(species_comments != "") %>%
   use_series(observation_date) %>%
   get_month %>% factor(levels=1:12) %>% table
 
 # Monthly # of species comments -- all observations >10 indiv
 
-month_spcom_10 <-readRDS("eucd_coastal.rds") %>%
-  filter(country != "Mexico") %>%
+month_spcom_10 <- eucd_coastal %>%
   filter(observation_count != "X") %>%
   filter(species_comments != "") %>%
   filter(as.numeric(observation_count) >= 10) %>%
@@ -116,7 +137,8 @@ names(month_spcom_10) <- month.abb
 
 # Analysis of coded data!
 read.csv("coded_final.csv",header=T,stringsAsFactors=F) -> coded
-
+coded <- coded %>% filter(get_year(observation_date) > 2006)
+  
 #coded %>% filter(FiF==1 & ! Dir %in% c('C',NA)) %>% use_series(observation_date) %>% get_month %>% as.numeric %>% hist
 month_FiF <- coded %>%
   filter(FiF==1) %>%
@@ -285,6 +307,8 @@ dev.off()
 monthly_coastal_density <-
   month_FiF/monthly_coastal_effort /
   sum( month_FiF/monthly_coastal_effort )
+monthly_coastal_density
+monthly_coastal_density[3:5] %>% sum
 
 ## Density histogram of coastal and pelagic together
 #pdf("coastal_pelagic_density.pdf")
@@ -425,7 +449,7 @@ effort_mm <-
 
 
 ##### Across years, flying flock frequency (of all EUCD reports) ######  -- USING
-readRDS("eucd_coastal.rds") -> eucd_coastal
+###     Gives flying flock frequency controlled for dove detection frequency
 yearly_spring_coastal_reports <- eucd_coastal %>% filter(get_month(observation_date) %in% 3:5) %>% use_series(observation_date) %>% get_year %>% factor(levels=2010:2018) %>% table %>% as.vector %>% setNames(2010:2018)
 df<- data.frame(year=2010:2018,fif_mm=as.numeric(fif_mm),yearly_spring_coastal_reports=as.numeric(yearly_spring_coastal_reports))
 # #lm(fif_mm~year,data=df) %>% summary
