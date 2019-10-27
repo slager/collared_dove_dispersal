@@ -52,7 +52,8 @@ write.csv(effort,"effort_stateprovcty_column_filtered.csv")
 
 load_effort_stateprovcty_column_filtered <- function(){
 fread("effort/effort_stateprovcty_column_filtered.csv") %>%
-  filter(get_year(observation_date) != 2018 | get_month(observation_date) < 9) # Omit observations after August 2018, to match effort dataset to EUCD coded dataset
+  filter(get_year(observation_date) != 2018 | get_month(observation_date) < 9) %>% # Omit observations after August 2018, to match effort dataset to EUCD coded dataset
+  filter(get_year(observation_date) > 2006) # Use records 2007 and newer, since species comments were introduced in June 2006
 }
 
 latlong_proj <- "+proj=longlat +datum=WGS84 +no_defs"
