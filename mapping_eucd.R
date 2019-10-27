@@ -23,15 +23,15 @@ latlong_proj <- "+proj=longlat +datum=WGS84 +no_defs"
 utm10_proj <- "+proj=utm +zone=10 +datum=WGS84 +units=m +no_defs"
 
 ## Import borders
-can <- readOGR("/Users/dave/Desktop/final figures/crow_map_final/gis_new/province",layer="province")
-usa <- readOGR("/Users/dave/Desktop/final figures/crow_map_final/gis_new/gz_2010_us_040_00_500k",layer="gz_2010_us_040_00_500k")
-mex <- readOGR("/Users/dave/Desktop/final figures/crow_map_final/gis_new/MEX_adm",layer="MEX_adm1")
+can <- readOGR("/Users/dave/crows/ms - hybrid zone/final figures/crow_map_final/gis_new/province",layer="province")
+usa <- readOGR("/Users/dave/crows/ms - hybrid zone/final figures/crow_map_final/gis_new/gz_2010_us_040_00_500k",layer="gz_2010_us_040_00_500k")
+mex <- readOGR("/Users/dave/crows/ms - hybrid zone/final figures/crow_map_final/gis_new/MEX_adm",layer="MEX_adm1")
 
 can <- spTransform(can,utm10_proj)
 usa <- spTransform(usa,utm10_proj)
 mex <- spTransform(mex,utm10_proj)
 
-#The 841 coastal with species comments
+#The 834 coastal with species comments
 points <- SpatialPoints(coords=cbind(coded$longitude,coded$latitude),proj4string=crs(latlong_proj))
 points <- spTransform(points,utm10_proj)
 
@@ -55,7 +55,7 @@ y1 <- 6783638
 #can <- crop(can, extent(x0, x1, y0, y1))
 #usa <- crop(usa, extent(x0, x1, y0, y1))
 
-pdf("map_coastal841_95_pelagic.pdf",2.5,5)
+pdf("map_coastal834_95_pelagic.pdf",2.5,5)
 par(mar=rep(0,4))
 plot(1, type="n", xlab="", ylab="",xaxs = "i", yaxs = "i",xlim=c(x0, x1), ylim=c(y0, y1))
 lines(usa,col='gray60')
